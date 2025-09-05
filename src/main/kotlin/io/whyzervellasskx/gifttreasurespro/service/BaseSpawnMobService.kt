@@ -10,22 +10,30 @@ import io.whyzervellasskx.gifttreasurespro.model.hibernate.entity.MobData
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
 import org.bukkit.event.EventPriority
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.EntityExplodeEvent
+import org.bukkit.event.player.PlayerInteractEntityEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
+import java.math.BigDecimal
+import java.util.*
+
+interface SpawnMobService : Service {
+
+}
 
 @Singleton
 class BaseSpawnMobService @Inject constructor(
     private val plugin: Plugin,
     private val baseConfigurationService: BaseConfigurationService,
-    private val hibernateService: BaseHibernateSessionFactoryService
-) : Service {
+    private val baseDataService: BaseDataService,
+) : SpawnMobService {
 
     private val config get() = baseConfigurationService.config
     private val blockStandCache = hashSetOf<Location>()
-    private val mobCache = mutableMapOf<Location, MobData>()
 
     override suspend fun setup() {
         plugin.eventListener<BlockPlaceEvent> { event ->
@@ -66,7 +74,7 @@ class BaseSpawnMobService @Inject constructor(
                 return@eventListener
             }
 
-            if (clickedBlock.location !in blockStandCache) {
+            if (clickedBlock.type != config.spawnBlockConfiguration.block) {
                 event.isCancelled = true
                 return@eventListener
             }
@@ -74,23 +82,41 @@ class BaseSpawnMobService @Inject constructor(
             val mythicMob = MythicBukkit.inst().mobManager.getMythicMob(mobName.uppercase()).orElse(null)
                 ?: return@eventListener
             val spawnLocation = BukkitAdapter.adapt(clickedBlock.location.clone().add(0.5, 1.0, 0.5))
-            mythicMob.spawn(spawnLocation, 1.0)
+            val activeMob = mythicMob.spawn(spawnLocation, 1.0)
+            val entity = activeMob.entity.bukkitEntity
+
+            val uuid = UUID.randomUUID()
+            val key = NamespacedKey(MythicBukkit.inst(), "uuid")
+            entity.persistentDataContainer.set(key, PersistentDataType.STRING, uuid.toString())
 
             val mobData = MobData(
                 mobName = mobName,
-                amount = 1,
+                uuid = uuid,
                 location = clickedBlock.location.toLocationRetriever(),
-                storage = 0.0,
-                level = 1
             )
-
-            mobCache[clickedBlock.location] = mobData
-
-            hibernateService.useSession { session ->
-                session.persist(mobData)
-            }
+            baseDataService.addMob(mobData)
 
             event.isCancelled = true
+        }
+
+        plugin.eventListener<PlayerInteractEntityEvent> { event ->
+            val player = event.player
+            val entity = event.rightClicked
+
+            val key = NamespacedKey(MythicBukkit.inst(), "uuid")
+            val uuidString = entity.persistentDataContainer.get(key, PersistentDataType.STRING) ?: return@eventListener
+            val uuid = try {
+                UUID.fromString(uuidString)
+            } catch (ex: IllegalArgumentException) {
+                return@eventListener
+            }
+            val mob = baseDataService.getMob(uuid) ?: return@eventListener
+
+            // отправляем игроку информацию
+            player.sendMessage("§7Уровень: §a${mob.getLevel()}")
+            player.sendMessage("§7Банк: §6${mob.getBank()}")
+
+            mob.deposit(3500.toBigDecimal(), 3500.0.toBigDecimal())
         }
     }
 }

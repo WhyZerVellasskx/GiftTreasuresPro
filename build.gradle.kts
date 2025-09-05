@@ -89,6 +89,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.h2database/h2
     implementation("com.h2database:h2:2.3.232")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.4")
+
+    compileOnly("com.github.decentsoftware-eu:decentholograms:2.9.7")
 }
 
 kotlin {

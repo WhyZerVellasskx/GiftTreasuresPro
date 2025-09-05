@@ -10,7 +10,7 @@ import java.time.Duration
 data class Configuration(
 
     val mariadb: DatabaseConnection = DatabaseConnection(),
-
+    val performance: Performance = Performance(),
     val spawnBlockConfiguration: SpawnBlockConfiguration = SpawnBlockConfiguration(),
 
     val mobs: Map<String, MobConfiguration> = mapOf(
@@ -34,8 +34,15 @@ data class Configuration(
         Уникальный моб
         Уровень: <level>
         Хранилище: <vault>
-    """.trimIndent()
+    """.trimIndent(),
 ) {
+
+    @Serializable
+    data class Performance(
+        val savePeriod: @Contextual Duration = Duration.ofSeconds(30),
+        val minSavePeriod: @Contextual Duration = Duration.ofMinutes(1),
+        val maxBulkSaves: Int = 5,
+    )
 
     @Serializable
     data class DatabaseConnection(

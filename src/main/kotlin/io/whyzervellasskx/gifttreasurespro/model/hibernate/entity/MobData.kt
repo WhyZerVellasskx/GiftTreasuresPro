@@ -1,16 +1,21 @@
 package io.whyzervellasskx.gifttreasurespro.model.hibernate.entity
 
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.LocationRetriever
+import io.whyzervellasskx.gifttreasurespro.InsufficientMobBalanceUserException
 import io.whyzervellasskx.gifttreasurespro.model.hibernate.HibernateConstants
 import jakarta.persistence.*
+import org.bukkit.command.CommandSender
 import org.hibernate.annotations.DynamicUpdate
+import org.hibernate.annotations.NaturalId
+import java.math.BigDecimal
+import java.util.UUID
 
 @DynamicUpdate
 @Entity
 @Table(
     name = "mob_data",
     uniqueConstraints = [
-        UniqueConstraint(name = "uc_mob_data_name_location", columnNames = ["mob_name", "location"])
+        UniqueConstraint(name = "uc_mob_data_uuid", columnNames = ["uuid"])
     ]
 )
 class MobData {
@@ -21,41 +26,43 @@ class MobData {
     var id: Long? = null
         protected set
 
-    @Column(name = "mob_name", nullable = false)
-    var mobName: String = HibernateConstants.DEFAULT_STRING
+    @NaturalId(mutable = false)
+    @Basic(optional = false)
+    @Column(name = "uuid", nullable = false, updatable = false, unique = true)
+    var uuid: UUID = HibernateConstants.DEFAULT_UUID
+        protected set
+
+    @Column(name = "type", nullable = false)
+    var mobType: String = HibernateConstants.DEFAULT_STRING
         protected set
 
     @Column(name = "amount", nullable = false)
-    var amount: Int = HibernateConstants.DEFAULT_INT
-        protected set
+    var amount: Int = 1
 
     @Basic(optional = true)
     @Column(name = "location", nullable = true)
     var location: LocationRetriever? = null
-        protected set
 
-    @Column(name = "storage", nullable = false)
-    var storage: Double = HibernateConstants.DEFAULT_DOUBLE
-        protected set
+    @Basic(optional = false)
+    @Column(name = "bank", nullable = false)
+    var bank: BigDecimal = BigDecimal.ZERO
 
     @Column(name = "level", nullable = false)
     var level: Int = 1
-        protected set
+
+    @Column(name = "is_hologram_enabled", nullable = false)
+    var isHologramEnabled: Boolean = true
 
     constructor()
 
     constructor(
         mobName: String,
-        amount: Int,
+        uuid: UUID,
         location: LocationRetriever?,
-        storage: Double,
-        level: Int
     ) {
-        this.mobName = mobName
-        this.amount = amount
+        this.mobType = mobName
+        this.uuid = uuid
         this.location = location
-        this.storage = storage
-        this.level = level
     }
 
     override fun equals(other: Any?): Boolean {

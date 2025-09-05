@@ -16,6 +16,7 @@ class Main @Inject constructor(
     private val baseConfigurationService: BaseConfigurationService,
     private val baseCommandService: BaseCommandService,
     private val userExceptionHandler: UserExceptionHandler,
+    private val baseDataService: BaseDataService,
     private val baseSpawnMobService: BaseSpawnMobService,
     private val baseHibernateSessionFactoryService: BaseHibernateSessionFactoryService,
 ) {
@@ -32,6 +33,7 @@ class Main @Inject constructor(
                 baseSpawnMobService,
                 userExceptionHandler,
                 baseHibernateSessionFactoryService,
+                baseDataService,
                 baseCommandService,
             ).forEach { service ->
                 service.setup()

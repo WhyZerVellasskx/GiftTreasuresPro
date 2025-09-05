@@ -8,6 +8,7 @@ import java.util.UUID
 object HibernateConstants {
     const val DEFAULT_STRING = "-null-"
     const val DEFAULT_DOUBLE = Double.NaN
+    const val DEFAULT_BOOLEAN = true
     const val DEFAULT_INT = -1
     val DEFAULT_COMPONENT = Component.text(DEFAULT_STRING)
     val DEFAULT_UUID = UUID(0, 0)
