@@ -5,6 +5,7 @@ import io.github.blackbaroness.boilerplate.base.Service
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.LocationRetriever
 import io.whyzervellasskx.gifttreasurespro.model.Mob
 import io.whyzervellasskx.gifttreasurespro.model.hibernate.entity.MobData
+import io.whyzervellasskx.gifttreasurespro.service.BaseDataService.ActualMobData
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.*
@@ -16,10 +17,14 @@ import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import kotlin.plus
 import kotlin.time.Duration.Companion.seconds
 
-interface DataService : Service
+interface DataService : Service {
+
+    fun getMob(uuid: UUID): ActualMobData?
+
+    suspend fun addMob(mobData: MobData)
+}
 
 @Singleton
 class BaseDataService @Inject constructor(
@@ -74,9 +79,9 @@ class BaseDataService @Inject constructor(
     }
 
     fun getAllMobs(): Collection<ActualMobData> = mobCache.values
-    fun getMob(uuid: UUID): ActualMobData? = mobCache[uuid]
+    override fun getMob(uuid: UUID): ActualMobData? = mobCache[uuid]
 
-    suspend fun addMob(mobData: MobData) = withContext(Dispatchers.IO) {
+    override suspend fun addMob(mobData: MobData) = withContext(Dispatchers.IO) {
         cacheMutex.withLock {
             mobCache[mobData.uuid] = ActualMobData(mobData)
         }
@@ -106,11 +111,15 @@ class BaseDataService @Inject constructor(
         private var _bank: BigDecimal = entity.bank
 
         override fun getLevel(): Int = _level
-        override fun setLevel(level: Int) { _level = level }
+        override fun setLevel(level: Int) {
+            _level = level
+        }
 
         override fun getMobCount(): Int = amount
         override fun setMobCount(): Int = amount
-        override fun addMobs(count: Int) { amount += count }
+        override fun addMobs(count: Int) {
+            amount += count
+        }
 
         override fun getLocation(): Location = _location?.safeLocation
             ?: throw IllegalStateException("Location is null")

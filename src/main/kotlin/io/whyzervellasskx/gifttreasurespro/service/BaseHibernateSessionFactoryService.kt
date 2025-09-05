@@ -18,6 +18,11 @@ import org.hibernate.SessionFactory
 
 interface HibernateSessionFactoryService : Service {
 
+    suspend fun <T> useSession(
+        session: Session? = null,
+        action: suspend (Session) -> T,
+    ): T
+
 }
 
 @Singleton
@@ -48,15 +53,14 @@ class BaseHibernateSessionFactoryService @Inject constructor(
                 MobData::class
             )
         }
-
     }
 
     override suspend fun destroy() {
         sessionFactory.close()
     }
 
-    suspend fun <T> useSession(
-        session: Session? = null,
+    override suspend fun <T> useSession(
+        session: Session?,
         action: suspend (Session) -> T,
     ): T = withContext(Dispatchers.IO) { useSessionInternal(session) { action.invoke(this) } }
 

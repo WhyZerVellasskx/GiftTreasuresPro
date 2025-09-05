@@ -18,7 +18,6 @@ import org.bukkit.event.player.PlayerInteractEntityEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
-import java.math.BigDecimal
 import java.util.*
 
 interface SpawnMobService : Service {
@@ -107,12 +106,11 @@ class BaseSpawnMobService @Inject constructor(
             val uuidString = entity.persistentDataContainer.get(key, PersistentDataType.STRING) ?: return@eventListener
             val uuid = try {
                 UUID.fromString(uuidString)
-            } catch (ex: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 return@eventListener
             }
             val mob = baseDataService.getMob(uuid) ?: return@eventListener
 
-            // отправляем игроку информацию
             player.sendMessage("§7Уровень: §a${mob.getLevel()}")
             player.sendMessage("§7Банк: §6${mob.getBank()}")
 
