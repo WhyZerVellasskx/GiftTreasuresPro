@@ -16,9 +16,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import org.bukkit.Location
 import org.bukkit.plugin.Plugin
 import java.util.*
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 interface HologramService : Service {
@@ -35,25 +35,25 @@ class BaseHologramService @Inject constructor(
 ) : HologramService {
 
     private val config: Configuration get() = baseConfigurationService.config
+
     private val hologramCache = HashMap<UUID, String>()
     private lateinit var hologramUpdater: Job
 
     override suspend fun setup() {
-        baseDataService.getAllMobs().forEach { mobData ->
-            if (!mobData.isHologramEnabled) return@forEach
-            spawnHologram(mobData)
-        }
+        baseDataService.getAllMobs()
+            .filter { it.isHologramEnabled }
+            .forEach { spawnHologram(it) }
 
         val minInterval = config.mobs.values
             .flatMap { it.levels.values }
-            .minOfOrNull { it.duration.seconds }
+            .minOfOrNull { it.duration.seconds } ?: 60
 
         hologramUpdater = plugin.launch(Dispatchers.Default) {
             while (isActive) {
-                delay(minInterval?.seconds ?: 1.minutes)
-                hologramCache.forEach { (uuid, name) ->
+                delay(minInterval.seconds)
+                hologramCache.forEach { (uuid, hologramName) ->
                     baseDataService.getMob(uuid)?.let { mob ->
-                        updateHologram(mob, name)
+                        updateHologram(mob, hologramName)
                     }
                 }
             }
@@ -62,36 +62,34 @@ class BaseHologramService @Inject constructor(
 
     override suspend fun destroy() {
         if (::hologramUpdater.isInitialized) hologramUpdater.cancel()
-        hologramCache.values.forEach { DHAPI.removeHologram(it) }
+        hologramCache.values.forEach(DHAPI::removeHologram)
         hologramCache.clear()
     }
 
     override fun createHologramForMob(mob: ActualMobData) {
-        if (hologramCache.containsKey(mob.uuid)) return
-        spawnHologram(mob)
+        if (!hologramCache.containsKey(mob.uuid)) {
+            spawnHologram(mob)
+        }
     }
 
     override fun removeHologramForMob(mob: ActualMobData) {
-        hologramCache.remove(mob.uuid)?.let { DHAPI.removeHologram(it) }
+        hologramCache.remove(mob.uuid)?.let(DHAPI::removeHologram)
     }
 
     private fun spawnHologram(mob: ActualMobData) {
-        val name = "mob_${mob.uuid}"
-        if (DHAPI.getHologram(name) != null) return
+        val hologramName = "mob_${mob.uuid}"
+        if (DHAPI.getHologram(hologramName) != null) return
 
-        val activeMob = MythicBukkit.inst().mobManager.getActiveMob(mob.uuid).orElse(null) ?: return
-        val entity = activeMob.entity.bukkitEntity
-        val loc = entity.location.clone().add(0.0, entity.height + 0.4, 0.0)
+        val entity = MythicBukkit.inst().mobManager.getActiveMob(mob.uuid).orElse(null)?.entity?.bukkitEntity ?: return
+        val loc = entity.location.above(entity.height + 0.4)
 
-        val lines = generateHologramLines(mob)
-        DHAPI.createHologram(name, loc, lines)
-        hologramCache[mob.uuid] = name
+        DHAPI.createHologram(hologramName, loc, generateHologramLines(mob))
+        hologramCache[mob.uuid] = hologramName
     }
 
     private fun updateHologram(mob: ActualMobData, hologramName: String) {
-        val lines = generateHologramLines(mob)
-        val hologram = DHAPI.getHologram(hologramName)!!
-        DHAPI.setHologramLines(hologram, lines)
+        val hologram = DHAPI.getHologram(hologramName) ?: return
+        DHAPI.setHologramLines(hologram, generateHologramLines(mob))
     }
 
     private fun generateHologramLines(mob: ActualMobData): List<String> {
@@ -99,21 +97,30 @@ class BaseHologramService @Inject constructor(
         val levelConfig = mobConfig.levels[mob.getLevel()] ?: return emptyList()
 
         return config.hologram.lines().map { line ->
-            line.replace("<level>", mob.getLevel().toString())
-                .replace("<bank>", mob.getBank().toPlainString())
-                .replace("<limit>", levelConfig.bankLimit.toString())
-                .replace("<profit>", (levelConfig.profit * mob.getMobCount()).toString())
-                .replace("<mob_count>", mob.getMobCount().toString())
-                .replace("<duration>", levelConfig.duration.format(DurationFormats.mediumLengthRussian()))
-                .replace("<bank_limit_progress>", baseProgressVisualizerService.buildColoredProgressBar(
-                    current = mob.getBank().toInt(),
-                    max = levelConfig.bankLimit.toInt(),
-                    filledChar = config.placeholders.progressFill,
-                    emptyChar = config.placeholders.progressEmpty,
-                    filledColor = config.placeholders.progressFillColor,
-                    emptyColor = config.placeholders.progressEmptyColor,
-                ).asLegacy)
-                .parseMiniMessage().asLegacy
+            with(mob) {
+                line.replace("<level>", getLevel().toString())
+                    .replace("<bank>", getBank().toPlainString())
+                    .replace("<limit>", levelConfig.bankLimit.toString())
+                    .replace("<profit>", (levelConfig.profit * getMobCount()).toString())
+                    .replace("<mob_count>", getMobCount().toString())
+                    .replace("<duration>", levelConfig.duration.format(DurationFormats.mediumLengthRussian()))
+                    .replace(
+                        "<bank_limit_progress>",
+                        baseProgressVisualizerService.buildColoredProgressBar(
+                            current = getBank().toInt(),
+                            max = levelConfig.bankLimit.toInt(),
+                            filledChar = config.placeholders.progressFill,
+                            emptyChar = config.placeholders.progressEmpty,
+                            filledColor = config.placeholders.progressFillColor,
+                            emptyColor = config.placeholders.progressEmptyColor,
+                        ).asLegacy
+                    )
+                    .parseMiniMessage()
+                    .asLegacy
+            }
         }
     }
+
+    private fun Location.above(offset: Double) =
+        this.clone().add(0.0, offset, 0.0)
 }
