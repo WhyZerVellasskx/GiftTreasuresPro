@@ -8,6 +8,7 @@ import dev.rollczi.litecommands.bukkit.LiteBukkitFactory
 import dev.rollczi.litecommands.scheduler.AbstractMainThreadBasedScheduler
 import io.github.blackbaroness.boilerplate.base.Service
 import io.github.blackbaroness.boilerplate.paper.adventure
+import io.whyzervellasskx.gifttreasurespro.command.TreasuresCommand
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ class BaseCommandService @Inject constructor(
     private val logger: Logger,
     private val userExceptionHandler: UserExceptionHandler,
     private val baseConfigurationService: BaseConfigurationService,
+    private val treasuresCommand: TreasuresCommand,
 ) : CommandService {
 
     private val messages get() = baseConfigurationService.messages
@@ -46,7 +48,7 @@ class BaseCommandService @Inject constructor(
             }
 
             commands(
-
+                treasuresCommand,
             )
 
             exceptionUnexpected { invocation, exception, _ ->

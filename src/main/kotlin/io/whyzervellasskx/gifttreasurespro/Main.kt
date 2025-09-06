@@ -9,6 +9,8 @@ import io.whyzervellasskx.gifttreasurespro.service.*
 import jakarta.inject.Singleton
 import org.bukkit.plugin.Plugin
 import xyz.xenondevs.invui.InvUI
+import kotlin.time.Duration
+import kotlin.time.measureTime
 
 @Singleton
 class Main @Inject constructor(
@@ -48,8 +50,12 @@ class Main @Inject constructor(
         }
     }
 
-    suspend fun reload() {
-        services.forEach { it.reload() }
+    suspend fun reload(): Duration {
+        val time = measureTime {
+            services.forEach { it.reload() }
+        }
+
+        return time
     }
 
     suspend fun stop() {

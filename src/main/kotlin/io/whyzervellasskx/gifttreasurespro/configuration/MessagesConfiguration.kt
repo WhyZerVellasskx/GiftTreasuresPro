@@ -6,6 +6,9 @@ import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.asMiniMess
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
+const val GREEN = "<color:#6fff00>"
+const val RED = "<color:#fc4300>"
+
 @Serializable
 data class MessagesConfiguration(
     val errors: Errors = Errors(),
@@ -15,8 +18,10 @@ data class MessagesConfiguration(
 
     @Serializable
     data class Commons(
-        val reload: String = "<green>Плагин <plugin> перезапущен за <duration>",
         val withDraw: String = "<green>Вы сняли деньги <amount> с банка",
+        val reload: String = "${GREEN}Вы успешно перезагрузили плагин <plugin> и это заняло <time>",
+        val genericInProgress: @Contextual MiniMessageComponent = "<gray>Процесс начался...".asMiniMessageComponent,
+        val genericSuccess: @Contextual MiniMessageComponent = "${GREEN}Операция успешно выполнена".asMiniMessageComponent,
     )
 
     @Serializable
