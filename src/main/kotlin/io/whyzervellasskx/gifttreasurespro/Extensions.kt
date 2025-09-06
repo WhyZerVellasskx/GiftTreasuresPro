@@ -2,6 +2,9 @@ package io.whyzervellasskx.gifttreasurespro
 
 import com.github.shynixn.mccoroutine.folia.*
 import de.tr7zw.nbtapi.NBT
+import dev.rollczi.litecommands.LiteCommandsBuilder
+import dev.rollczi.litecommands.argument.ArgumentKey
+import dev.rollczi.litecommands.argument.resolver.ArgumentResolverBase
 import io.github.blackbaroness.boilerplate.base.Boilerplate
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.NbtItem
 import io.github.blackbaroness.boilerplate.paper.getCustomEventDispatcherResolvers
@@ -348,6 +351,14 @@ fun ItemStack.modifyNbtTag(value: String): ItemStack {
     return this
 }
 
+fun ItemStack.modifyNbtTag(key: String, value: String): ItemStack {
+    NBT.modify(this) { nbt ->
+        nbt.setString(key, value)
+    }
+    return this
+}
+
+
 fun Entity.modifyNbtTag(value: String): Entity {
     NBT.modifyPersistentData(this) { nbt ->
         nbt.setBoolean(value, true)
@@ -372,5 +383,14 @@ inline fun <reified T> ItemStack.getNBTTag(key: String): T? {
         result = nbt.getOrNull(key, T::class.java) as? T
     }
     return result
+}
+
+inline fun <SENDER, reified ARG> LiteCommandsBuilder<SENDER, *, *>.argument(
+    resolver: ArgumentResolverBase<SENDER, ARG>,
+    argumentKey: String? = null
+) {
+    argumentKey?.let {
+        this.argument(ARG::class.java, ArgumentKey.of(it), resolver)
+    } ?: this.argument(ARG::class.java, resolver)
 }
 

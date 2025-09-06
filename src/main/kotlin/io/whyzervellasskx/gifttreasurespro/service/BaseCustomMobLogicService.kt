@@ -1,9 +1,11 @@
 package io.whyzervellasskx.gifttreasurespro.service
 
+import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent
 import io.github.blackbaroness.boilerplate.base.Service
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.toLocationRetriever
 import io.lumine.mythic.bukkit.BukkitAdapter
 import io.lumine.mythic.bukkit.MythicBukkit
+import io.papermc.paper.event.entity.EntityMoveEvent
 import io.whyzervellasskx.gifttreasurespro.eventListener
 import io.whyzervellasskx.gifttreasurespro.getNBTTag
 import io.whyzervellasskx.gifttreasurespro.model.hibernate.entity.MobData
@@ -11,12 +13,15 @@ import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import org.bukkit.Location
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.event.EventPriority
 import org.bukkit.event.block.*
-import org.bukkit.event.entity.EntityExplodeEvent
+import org.bukkit.event.entity.*
 import org.bukkit.event.player.PlayerInteractEntityEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.vehicle.VehicleEntityCollisionEvent
 import org.bukkit.plugin.Plugin
+import org.bukkit.util.Vector
 
 interface SpawnMobService : Service
 
@@ -31,94 +36,133 @@ class BaseSpawnMobService @Inject constructor(
 
     private val config get() = baseConfigurationService.config
 
-    fun isProtectedBlock(location: Location): Boolean {
-        val mob = baseDataService.getMobByLocation(location)
-        return mob != null
-    }
-
     override suspend fun setup() {
-        plugin.eventListener<BlockPlaceEvent> { event ->
-            val block = event.block
+        plugin.eventListener<BlockPlaceEvent> {
+            val block = it.block
             if (block.type == config.spawnBlockConfiguration.block &&
                 block.location.y <= config.spawnBlockConfiguration.maxHeight
-            ) {
-                event.isCancelled = true
-            }
+            ) it.isCancelled = true
         }
 
         plugin.eventListener<BlockBreakEvent>(EventPriority.HIGHEST) {
-            if (it.block.type == config.spawnBlockConfiguration.block && isProtectedBlock(it.block.location)) {
+            if (it.block.type == config.spawnBlockConfiguration.block && isProtectedBlock(it.block.location))
                 it.isCancelled = true
-            }
         }
 
         val explosionHandler: (MutableList<Block>) -> Unit = { blocks ->
-            blocks.removeIf { it.type == config.spawnBlockConfiguration.block && isProtectedBlock(it.location) }
+            blocks.removeIf { block -> block.type == config.spawnBlockConfiguration.block && isProtectedBlock(block.location) }
         }
 
-        plugin.eventListener<EntityExplodeEvent> { explosionHandler(it.blockList()) }
-        plugin.eventListener<BlockExplodeEvent> { explosionHandler(it.blockList()) }
-
-        plugin.eventListener<BlockPistonExtendEvent> {
-            if (it.blocks.any { block -> block.type == config.spawnBlockConfiguration.block && isProtectedBlock(block.location) })
-                it.isCancelled = true
+        plugin.eventListener<EntityExplodeEvent> {
+            explosionHandler(it.blockList())
+            if (isProtectedMob(it.entity)) it.isCancelled = true
         }
 
-        plugin.eventListener<BlockPistonRetractEvent> {
-            if (it.blocks.any { block -> block.type == config.spawnBlockConfiguration.block && isProtectedBlock(block.location) })
-                it.isCancelled = true
+        plugin.eventListener<BlockExplodeEvent> {
+            explosionHandler(it.blockList())
         }
 
-        // spawn mob logic
-        plugin.eventListener<PlayerInteractEvent> { event ->
-            val clickedBlock = event.clickedBlock ?: return@eventListener
-            val item = event.item ?: return@eventListener
+        plugin.eventListener<BlockPistonExtendEvent>(priority = EventPriority.HIGHEST) {
+            if (pistonShouldBeCancelled(it)) it.isCancelled = true
+        }
+
+        plugin.eventListener<BlockPistonRetractEvent>(priority = EventPriority.HIGHEST) {
+            if (pistonShouldBeCancelled(it)) it.isCancelled = true
+        }
+
+        plugin.eventListener<PlayerInteractEvent> {
+            val clickedBlock = it.clickedBlock ?: return@eventListener
+            val item = it.item ?: return@eventListener
             if (!item.type.name.contains("SPAWN_EGG", ignoreCase = true)) return@eventListener
-
             val mobName = item.getNBTTag<String>("MYTHIC_EGG")?.lowercase() ?: run {
-                event.isCancelled = true
+                it.isCancelled = true
                 return@eventListener
             }
-
             if (clickedBlock.type != config.spawnBlockConfiguration.block) {
-                event.isCancelled = true
+                it.isCancelled = true
                 return@eventListener
             }
 
             val existingMob = baseDataService.getMobByLocation(clickedBlock.location)
             if (existingMob != null) {
                 existingMob.addMobs(1)
-                event.isCancelled = true
+                item.amount -= 1
+                it.isCancelled = true
                 return@eventListener
             }
 
-            val mythicMob =
-                MythicBukkit.inst().mobManager.getMythicMob(mobName.uppercase()).orElse(null) ?: return@eventListener
+            val mythicMob = MythicBukkit.inst().mobManager.getMythicMob(mobName.uppercase()).orElse(null)
+                ?: return@eventListener
             val spawnLocation = BukkitAdapter.adapt(clickedBlock.location.clone().add(0.5, 1.0, 0.5))
             val activeMob = mythicMob.spawn(spawnLocation, 1.0)
-
-            val uuid = activeMob.uniqueId
-
             val mobData = MobData(
                 mobName = mobName,
-                uuid = uuid,
+                uuid = activeMob.uniqueId,
                 location = clickedBlock.location.toLocationRetriever(),
             )
-
             val actualMob = baseDataService.addMob(mobData)
             baseHologramService.createHologramForMob(actualMob)
-            event.isCancelled = true
+            item.amount -= 1
+            it.isCancelled = true
         }
 
-        plugin.eventListener<PlayerInteractEntityEvent> { event ->
-            val player = event.player
-            val entity = event.rightClicked
-
+        plugin.eventListener<PlayerInteractEntityEvent> {
+            val player = it.player
+            val entity = it.rightClicked
             val activeMob =
                 MythicBukkit.inst().mobManager.getActiveMob(entity.uniqueId).orElse(null) ?: return@eventListener
             val mobData = baseDataService.getMob(activeMob.uniqueId) ?: return@eventListener
-
             baseMenuService.openMainMenu(player, mobData.uuid)
         }
+
+        plugin.eventListener<EntityDamageEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+        plugin.eventListener<EntityDamageByEntityEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+        plugin.eventListener<EntityChangeBlockEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+        plugin.eventListener<EntityKnockbackByEntityEvent> {
+            if (isProtectedMob(it.entity)) {
+                it.isCancelled = true; it.entity.velocity = Vector(0.0, 0.0, 0.0)
+            }
+        }
+        plugin.eventListener<EntityTargetEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+        plugin.eventListener<VehicleEntityCollisionEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+        plugin.eventListener<EntityCombustEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+        plugin.eventListener<EntityPortalEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+        plugin.eventListener<EntityTeleportEvent> { if (isProtectedMob(it.entity)) it.isCancelled = true }
+
+        plugin.eventListener<EntityMoveEvent> {
+            if (isProtectedMob(it.entity)) {
+                it.isCancelled = true
+                it.entity.velocity = Vector(0.0, 0.0, 0.0)
+            }
+        }
     }
+
+    private fun isProtectedBlock(location: Location) = baseDataService.getMobByLocation(location) != null
+    private fun isProtectedMob(entity: org.bukkit.entity.Entity) = baseDataService.getMob(entity.uniqueId) != null
+
+    private fun pistonShouldBeCancelled(event: BlockPistonEvent): Boolean {
+        val blocks = when (event) {
+            is BlockPistonExtendEvent -> event.blocks
+            is BlockPistonRetractEvent -> event.blocks
+            else -> return false
+        }
+
+        val direction = event.direction
+
+        return blocks.any { movingBlock ->
+            val targetBlock = movingBlock.getRelative(direction)
+
+            if (isProtectedBlock(targetBlock.location) || baseDataService.getMobByLocation(targetBlock.location) != null) {
+                return@any true
+            }
+
+            val belowTarget = targetBlock.getRelative(BlockFace.DOWN)
+            if (isProtectedBlock(belowTarget.location) || baseDataService.getMobByLocation(belowTarget.location) != null) {
+                return@any true
+            }
+
+            false
+        }
+    }
+
 }

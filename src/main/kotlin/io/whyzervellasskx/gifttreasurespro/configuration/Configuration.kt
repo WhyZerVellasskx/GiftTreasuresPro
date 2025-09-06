@@ -1,5 +1,6 @@
 package io.whyzervellasskx.gifttreasurespro.configuration
 
+import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.ItemTemplate
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.MariaDbConfiguration
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.MiniMessageComponent
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.asMiniMessageComponent
@@ -34,6 +35,19 @@ data class Configuration(
         ),
     ),
 
+    val eggs: Map<String, EggConfiguration> = mapOf(
+        "frog" to EggConfiguration(
+            item = ItemTemplate(
+                material = Material.PIG_SPAWN_EGG,
+                displayName = "frog spawn egg".asMiniMessageComponent,
+                lore = listOf(
+                    "test lore",
+                ).map { it.asMiniMessageComponent },
+                customModelData = 5,
+            ),
+        ),
+    ),
+
     val hologram: String = """
           <gray>Уровень моба: <yellow><level>
           <gray>Банк: <yellow><bank> / <red><limit>
@@ -42,6 +56,11 @@ data class Configuration(
     """.trimIndent(),
     val placeholders: Placeholders = Placeholders(),
 ) {
+
+    @Serializable
+    data class EggConfiguration(
+        val item: ItemTemplate,
+    )
 
     @Serializable
     data class Performance(

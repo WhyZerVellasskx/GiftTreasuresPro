@@ -45,6 +45,7 @@ class BaseMenuService @Inject constructor(
     private val dataService: BaseDataService,
     private val boilerplateInvUiFactory: BoilerplateInvUiFactory,
     private val baseProgressVisualizerService: BaseProgressVisualizerService,
+    private val baseCustomMobSpawnEggService: BaseCustomMobSpawnEggService,
     private val baseHologramService: BaseHologramService,
 ) : MenuService {
 
@@ -117,9 +118,6 @@ class BaseMenuService @Inject constructor(
                 }
 
                 applyTemplate(menuConfig, 'T') { click ->
-                    val mythicMob = MythicBukkit.inst().mobManager.getMythicMob(mob.type.uppercase()).orElse(null)
-                        ?: return@applyTemplate
-                    val egg = mythicMob.egg ?: return@applyTemplate
                     val activeMob = MythicBukkit.inst().mobManager.getActiveMob(mob.uuid).orElse(null)
 
                     click.event.view.close()
@@ -127,13 +125,7 @@ class BaseMenuService @Inject constructor(
                     activeMob?.remove()
                     mob.destroy()
 
-                    val item: ItemStack = if (egg is BukkitItemStack) {
-                        egg.build()
-                    } else {
-                        throw IllegalStateException("Unknown AbstractItemStack implementation: ${egg.javaClass}")
-                    }
-
-                    player.giveOrDrop(listOf(item))
+                    baseCustomMobSpawnEggService.give(player, mob.type)
                 }
 
                 val displayNextLevel = nextLevelConfig?.let { (mob.getLevel() + 1).toString().asMiniMessageComponent }

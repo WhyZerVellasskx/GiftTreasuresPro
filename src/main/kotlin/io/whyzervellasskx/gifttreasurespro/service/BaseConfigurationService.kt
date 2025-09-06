@@ -17,16 +17,19 @@ import kotlinx.serialization.modules.SerializersModule
 import org.bukkit.plugin.Plugin
 import kotlin.io.path.createDirectories
 
+// configuration
 interface ConfigurationService : Service {
     fun save()
 }
 
+// yaml configuration
 interface YamlConfigurationService : ConfigurationService {
     var config: Configuration
     var messages: MessagesConfiguration
     var menus: MenusConfiguration
 }
 
+// implementation
 @Singleton
 class BaseConfigurationService @Inject constructor(
     plugin: Plugin,
