@@ -7,6 +7,7 @@ import io.github.blackbaroness.boilerplate.kotlinx.serialization.getBuiltInKotli
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.update
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.write
 import io.whyzervellasskx.gifttreasurespro.configuration.Configuration
+import io.whyzervellasskx.gifttreasurespro.configuration.MenusConfiguration
 import io.whyzervellasskx.gifttreasurespro.configuration.MessagesConfiguration
 import io.whyzervellasskx.gifttreasurespro.removeNullsForFile
 import jakarta.inject.Inject
@@ -23,6 +24,7 @@ interface ConfigurationService : Service {
 interface YamlConfigurationService : ConfigurationService {
     var config: Configuration
     var messages: MessagesConfiguration
+    var menus: MenusConfiguration
 }
 
 @Singleton
@@ -33,6 +35,8 @@ class BaseConfigurationService @Inject constructor(
     override lateinit var config: Configuration
 
     override lateinit var messages: MessagesConfiguration
+
+    override lateinit var menus: MenusConfiguration
 
     private val configFolder = plugin.dataFolder.toPath()
 
@@ -51,6 +55,7 @@ class BaseConfigurationService @Inject constructor(
     )
 
     private val settingsFile = configFolder.resolve("settings.yml")
+    private val menusFile = configFolder.resolve("menus.yml")
     private val messagesFile = configFolder.resolve("messages.yml")
 
     override suspend fun setup() = doReload()
@@ -70,5 +75,8 @@ class BaseConfigurationService @Inject constructor(
 
         messages = yaml.update(messagesFile) { MessagesConfiguration() }
         removeNullsForFile(messagesFile)
+
+        menus = yaml.update(menusFile) { MenusConfiguration() }
+        removeNullsForFile(menusFile)
     }
 }

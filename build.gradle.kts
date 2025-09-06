@@ -90,6 +90,7 @@ dependencies {
     implementation("com.h2database:h2:2.3.232")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.4")
 
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.decentsoftware-eu:decentholograms:2.9.7")
 }
 
@@ -142,10 +143,9 @@ bukkit {
     description = project.description
     version = project.version.toString()
     apiVersion = "1.16"
-    depend = listOf("NBTAPI",)
+    depend = listOf("NBTAPI", "DecentHolograms", "Vault",)
     website = "https://github.com/WhyZerVellasskx"
     authors = listOf("WhyZerVellasskx")
-
 }
 
 tasks.runServer {

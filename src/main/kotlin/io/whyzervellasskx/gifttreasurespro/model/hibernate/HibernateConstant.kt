@@ -5,7 +5,7 @@ import org.bukkit.Location
 import java.time.Instant
 import java.util.UUID
 
-object HibernateConstants {
+object HibernateConstant {
     const val DEFAULT_STRING = "-null-"
     const val DEFAULT_DOUBLE = Double.NaN
     const val DEFAULT_BOOLEAN = true

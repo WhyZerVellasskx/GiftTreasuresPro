@@ -19,3 +19,10 @@ class InsufficientMobBalanceUserException(
     val bank: BigDecimal
 ) : UserException(sender)
 
+class NoNextLevelException(
+    sender: CommandSender,
+) : UserException(sender)
+
+class NoEnoughMoneyException(
+    sender: CommandSender,
+) : UserException(sender)

@@ -19,6 +19,9 @@ class Main @Inject constructor(
     private val baseDataService: BaseDataService,
     private val baseSpawnMobService: BaseSpawnMobService,
     private val baseHibernateSessionFactoryService: BaseHibernateSessionFactoryService,
+    private val baseMobProfitService: BaseMobProfitService,
+    private val baseMenuService: BaseMenuService,
+    private val baseHologramService: BaseHologramService,
 ) {
 
     private lateinit var services: List<Service>
@@ -34,7 +37,10 @@ class Main @Inject constructor(
                 userExceptionHandler,
                 baseHibernateSessionFactoryService,
                 baseDataService,
+                baseMenuService,
                 baseCommandService,
+                baseMobProfitService,
+                baseHologramService,
             ).forEach { service ->
                 service.setup()
                 add(service)

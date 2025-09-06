@@ -1,6 +1,8 @@
 package io.whyzervellasskx.gifttreasurespro.configuration
 
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.MariaDbConfiguration
+import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.MiniMessageComponent
+import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.asMiniMessageComponent
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bukkit.Material
@@ -18,23 +20,27 @@ data class Configuration(
             levels = mapOf(
                 1 to MobConfiguration.LevelConfiguration(
                     duration = Duration.ofSeconds(60),
-                    money = 10.0,
-                    vaultLimit = 3500.0,
+                    price = 0.0,
+                    profit = 10.0,
+                    bankLimit = 3500.0,
                 ),
                 2 to MobConfiguration.LevelConfiguration(
                     duration = Duration.ofSeconds(120),
-                    money = 25.0,
-                    vaultLimit = 5000.0,
+                    price = 3500.0,
+                    profit = 25.0,
+                    bankLimit = 5000.0,
                 )
             )
         ),
     ),
 
     val hologram: String = """
-        Уникальный моб
-        Уровень: <level>
-        Хранилище: <vault>
+          <gray>Уровень моба: <yellow><level>
+          <gray>Банк: <yellow><bank> / <red><limit>
+          <gray>Прибыль: <green><profit> <gray>каждые <red><duration>
+          <gray>Количество мобов: <light_purple><mob_count>
     """.trimIndent(),
+    val placeholders: Placeholders = Placeholders(),
 ) {
 
     @Serializable
@@ -64,8 +70,21 @@ data class Configuration(
         @Serializable
         data class LevelConfiguration(
             val duration: @Contextual Duration,
-            val money: Double,
-            val vaultLimit: Double,
+            val price: Double,
+            val profit: Double,
+            val bankLimit: Double,
         )
     }
+
+    @Serializable
+    data class Placeholders(
+        val hologramEnabled: @Contextual MiniMessageComponent = "<green>ВКЛ".asMiniMessageComponent,
+        val hologramDisable: @Contextual MiniMessageComponent = "<red>ВЫКЛ".asMiniMessageComponent,
+        val noNextLevel: @Contextual MiniMessageComponent = "<red>Макс уровень".asMiniMessageComponent,
+        val noNextLevelPrice: @Contextual MiniMessageComponent = "<red>-".asMiniMessageComponent,
+        val progressFill: Char = '+',
+        val progressEmpty: Char = '-',
+        val progressFillColor: String = "green",
+        val progressEmptyColor: String = "red",
+    )
 }

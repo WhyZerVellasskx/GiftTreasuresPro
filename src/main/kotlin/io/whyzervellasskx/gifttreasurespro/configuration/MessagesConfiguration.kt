@@ -16,32 +16,8 @@ data class MessagesConfiguration(
     @Serializable
     data class Commons(
         val reload: String = "<green>Плагин <plugin> перезапущен за <duration>",
-        val nearbyPlayerMessages: NearbyPlayerMessages = NearbyPlayerMessages(),
-        val placeholders: Placeholders = Placeholders()
-    ) {
-
-        @Serializable
-        data class NearbyPlayerMessages(
-            val message: String = """
-            Ближайший игрок <player>
-            Метров до него: <radius>
-            Направление <arrow>
-        """.trimIndent(),
-            val actionBar: String = "Ближайший игрок <player> <radius> <arrow>"
-        )
-
-        @Serializable
-        data class Placeholders(
-            val north: String = "⬆",
-            val northEast: String = "⬈",
-            val east: String = "➡",
-            val southEast: String = "⬊",
-            val south: String = "⬇",
-            val southWest: String = "⬋",
-            val west: String = "⬅",
-            val northWest: String = "⬉"
-        )
-    }
+        val withDraw: String = "<green>Вы сняли деньги <amount> с банка",
+    )
 
     @Serializable
     data class Errors(
@@ -58,6 +34,7 @@ data class MessagesConfiguration(
             InvalidUsage.Cause.TOO_MANY_ARGUMENTS to "Слишком много аргументов"
         ),
 
-        val emptyNearbyPlayer: @Contextual MiniMessageComponent = "Не удалось найти ближайшего игрока".asMiniMessageComponent,
+        val noEnoughMoney: String = "Недостаточно денег (есть: <bank>) а вы пытались снять <amount>",
+        val noNextLevel: String = "Нету некст левела",
     )
 }

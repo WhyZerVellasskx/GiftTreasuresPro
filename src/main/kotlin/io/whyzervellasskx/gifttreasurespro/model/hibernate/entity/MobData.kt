@@ -1,14 +1,12 @@
 package io.whyzervellasskx.gifttreasurespro.model.hibernate.entity
 
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.LocationRetriever
-import io.whyzervellasskx.gifttreasurespro.InsufficientMobBalanceUserException
-import io.whyzervellasskx.gifttreasurespro.model.hibernate.HibernateConstants
+import io.whyzervellasskx.gifttreasurespro.model.hibernate.HibernateConstant
 import jakarta.persistence.*
-import org.bukkit.command.CommandSender
 import org.hibernate.annotations.DynamicUpdate
 import org.hibernate.annotations.NaturalId
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 @DynamicUpdate
 @Entity
@@ -29,11 +27,11 @@ class MobData {
     @NaturalId(mutable = false)
     @Basic(optional = false)
     @Column(name = "uuid", nullable = false, updatable = false, unique = true)
-    var uuid: UUID = HibernateConstants.DEFAULT_UUID
+    var uuid: UUID = HibernateConstant.DEFAULT_UUID
         protected set
 
     @Column(name = "type", nullable = false)
-    var mobType: String = HibernateConstants.DEFAULT_STRING
+    var mobType: String = HibernateConstant.DEFAULT_STRING
         protected set
 
     @Column(name = "amount", nullable = false)
@@ -68,8 +66,10 @@ class MobData {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null) return false
-        val oEffectiveClass = if (other is org.hibernate.proxy.HibernateProxy) other.hibernateLazyInitializer.persistentClass else other.javaClass
-        val thisEffectiveClass = if (this is org.hibernate.proxy.HibernateProxy) this.hibernateLazyInitializer.persistentClass else this.javaClass
+        val oEffectiveClass =
+            if (other is org.hibernate.proxy.HibernateProxy) other.hibernateLazyInitializer.persistentClass else other.javaClass
+        val thisEffectiveClass =
+            if (this is org.hibernate.proxy.HibernateProxy) this.hibernateLazyInitializer.persistentClass else this.javaClass
         if (thisEffectiveClass != oEffectiveClass) return false
         other as MobData
         return id != null && id == other.id

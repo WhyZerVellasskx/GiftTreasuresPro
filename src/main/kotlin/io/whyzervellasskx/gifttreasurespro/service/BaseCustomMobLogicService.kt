@@ -10,29 +10,31 @@ import io.whyzervellasskx.gifttreasurespro.model.hibernate.entity.MobData
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import org.bukkit.Location
-import org.bukkit.NamespacedKey
+import org.bukkit.block.Block
 import org.bukkit.event.EventPriority
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.player.PlayerInteractEntityEvent
 import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.Plugin
-import java.util.*
 
-interface SpawnMobService : Service {
-
-}
+interface SpawnMobService : Service
 
 @Singleton
 class BaseSpawnMobService @Inject constructor(
     private val plugin: Plugin,
     private val baseConfigurationService: BaseConfigurationService,
     private val baseDataService: BaseDataService,
+    private val baseMenuService: BaseMenuService,
+    private val baseHologramService: BaseHologramService,
 ) : SpawnMobService {
 
     private val config get() = baseConfigurationService.config
-    private val blockStandCache = hashSetOf<Location>()
+
+    fun isProtectedBlock(location: Location): Boolean {
+        val mob = baseDataService.getMobByLocation(location)
+        return mob != null
+    }
 
     override suspend fun setup() {
         plugin.eventListener<BlockPlaceEvent> { event ->
@@ -42,27 +44,32 @@ class BaseSpawnMobService @Inject constructor(
             ) {
                 event.isCancelled = true
             }
-            blockStandCache.add(block.location)
         }
 
         plugin.eventListener<BlockBreakEvent>(EventPriority.HIGHEST) {
-            if (it.block.location in blockStandCache) it.isCancelled = true
+            if (it.block.type == config.spawnBlockConfiguration.block && isProtectedBlock(it.block.location)) {
+                it.isCancelled = true
+            }
         }
 
-        val explosionHandler: (MutableList<org.bukkit.block.Block>) -> Unit = { blocks ->
-            blocks.removeIf { it.location in blockStandCache }
+        val explosionHandler: (MutableList<Block>) -> Unit = { blocks ->
+            blocks.removeIf { it.type == config.spawnBlockConfiguration.block && isProtectedBlock(it.location) }
         }
 
         plugin.eventListener<EntityExplodeEvent> { explosionHandler(it.blockList()) }
         plugin.eventListener<BlockExplodeEvent> { explosionHandler(it.blockList()) }
 
         plugin.eventListener<BlockPistonExtendEvent> {
-            if (it.blocks.any { block -> block.location in blockStandCache }) it.isCancelled = true
-        }
-        plugin.eventListener<BlockPistonRetractEvent> {
-            if (it.blocks.any { block -> block.location in blockStandCache }) it.isCancelled = true
+            if (it.blocks.any { block -> block.type == config.spawnBlockConfiguration.block && isProtectedBlock(block.location) })
+                it.isCancelled = true
         }
 
+        plugin.eventListener<BlockPistonRetractEvent> {
+            if (it.blocks.any { block -> block.type == config.spawnBlockConfiguration.block && isProtectedBlock(block.location) })
+                it.isCancelled = true
+        }
+
+        // spawn mob logic
         plugin.eventListener<PlayerInteractEvent> { event ->
             val clickedBlock = event.clickedBlock ?: return@eventListener
             val item = event.item ?: return@eventListener
@@ -78,23 +85,28 @@ class BaseSpawnMobService @Inject constructor(
                 return@eventListener
             }
 
-            val mythicMob = MythicBukkit.inst().mobManager.getMythicMob(mobName.uppercase()).orElse(null)
-                ?: return@eventListener
+            val existingMob = baseDataService.getMobByLocation(clickedBlock.location)
+            if (existingMob != null) {
+                existingMob.addMobs(1)
+                event.isCancelled = true
+                return@eventListener
+            }
+
+            val mythicMob =
+                MythicBukkit.inst().mobManager.getMythicMob(mobName.uppercase()).orElse(null) ?: return@eventListener
             val spawnLocation = BukkitAdapter.adapt(clickedBlock.location.clone().add(0.5, 1.0, 0.5))
             val activeMob = mythicMob.spawn(spawnLocation, 1.0)
-            val entity = activeMob.entity.bukkitEntity
 
-            val uuid = UUID.randomUUID()
-            val key = NamespacedKey(MythicBukkit.inst(), "uuid")
-            entity.persistentDataContainer.set(key, PersistentDataType.STRING, uuid.toString())
+            val uuid = activeMob.uniqueId
 
             val mobData = MobData(
                 mobName = mobName,
                 uuid = uuid,
                 location = clickedBlock.location.toLocationRetriever(),
             )
-            baseDataService.addMob(mobData)
 
+            val actualMob = baseDataService.addMob(mobData)
+            baseHologramService.createHologramForMob(actualMob)
             event.isCancelled = true
         }
 
@@ -102,19 +114,11 @@ class BaseSpawnMobService @Inject constructor(
             val player = event.player
             val entity = event.rightClicked
 
-            val key = NamespacedKey(MythicBukkit.inst(), "uuid")
-            val uuidString = entity.persistentDataContainer.get(key, PersistentDataType.STRING) ?: return@eventListener
-            val uuid = try {
-                UUID.fromString(uuidString)
-            } catch (_: IllegalArgumentException) {
-                return@eventListener
-            }
-            val mob = baseDataService.getMob(uuid) ?: return@eventListener
+            val activeMob =
+                MythicBukkit.inst().mobManager.getActiveMob(entity.uniqueId).orElse(null) ?: return@eventListener
+            val mobData = baseDataService.getMob(activeMob.uniqueId) ?: return@eventListener
 
-            player.sendMessage("§7Уровень: §a${mob.getLevel()}")
-            player.sendMessage("§7Банк: §6${mob.getBank()}")
-
-            mob.deposit(3500.toBigDecimal(), 3500.0.toBigDecimal())
+            baseMenuService.openMainMenu(player, mobData.uuid)
         }
     }
 }
