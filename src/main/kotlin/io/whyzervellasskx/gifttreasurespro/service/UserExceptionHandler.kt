@@ -9,7 +9,6 @@ import io.github.blackbaroness.boilerplate.base.Service
 import io.github.blackbaroness.boilerplate.paper.UserExceptionHandler
 import io.github.blackbaroness.boilerplate.paper.adventure
 import io.github.blackbaroness.boilerplate.paper.eventListener
-import io.whyzervellasskx.gifttreasurespro.EmptyNearbyPlayerException
 import io.whyzervellasskx.gifttreasurespro.InsufficientMobBalanceUserException
 import io.whyzervellasskx.gifttreasurespro.NoEnoughMoneyException
 import io.whyzervellasskx.gifttreasurespro.NoNextLevelException

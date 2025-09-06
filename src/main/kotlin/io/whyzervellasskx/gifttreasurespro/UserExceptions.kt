@@ -10,9 +10,6 @@ open class UserException(
     cause: Throwable? = null
 ) : Exception(cause)
 
-
-class EmptyNearbyPlayerException(sender: Player) : UserException(sender)
-
 class InsufficientMobBalanceUserException(
     sender: CommandSender,
     val amount: BigDecimal,
