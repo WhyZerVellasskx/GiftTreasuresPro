@@ -35,12 +35,12 @@ class Main @Inject constructor(
         services = buildList {
             arrayOf(
                 baseConfigurationService,
-                baseSpawnMobService,
                 userExceptionHandler,
                 baseHibernateSessionFactoryService,
                 baseDataService,
                 baseMenuService,
                 baseCommandService,
+                baseSpawnMobService,
                 baseMobProfitService,
                 baseHologramService,
             ).forEach { service ->

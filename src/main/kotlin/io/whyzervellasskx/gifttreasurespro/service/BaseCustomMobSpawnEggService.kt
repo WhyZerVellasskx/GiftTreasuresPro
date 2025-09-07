@@ -29,7 +29,7 @@ class BaseCustomMobSpawnEggService @Inject constructor(
         val eggConfig = config.eggs[egg] ?: return@withContext
         val item = eggConfig.item.safeItem
 
-        item.modifyNbtTag("MYTHIC_EGG", egg)
+        item.modifyNbtTag("MYTHIC_EGG_", egg)
 
         withContext(plugin.entityDispatcher(player)) {
             player.giveOrDrop(listOf(item))

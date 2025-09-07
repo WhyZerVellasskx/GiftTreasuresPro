@@ -5,6 +5,7 @@ import io.github.blackbaroness.boilerplate.base.Service
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.toLocationRetriever
 import io.lumine.mythic.bukkit.BukkitAdapter
 import io.lumine.mythic.bukkit.MythicBukkit
+import io.lumine.mythic.core.mobs.DespawnMode
 import io.papermc.paper.event.entity.EntityMoveEvent
 import io.whyzervellasskx.gifttreasurespro.eventListener
 import io.whyzervellasskx.gifttreasurespro.getNBTTag
@@ -44,6 +45,14 @@ class BaseSpawnMobService @Inject constructor(
             ) it.isCancelled = true
         }
 
+        plugin.eventListener<BlockPlaceEvent> { event ->
+            val block = event.block
+            if (block.type != config.spawnBlockConfiguration.block) return@eventListener
+            if (block.location.y <= config.spawnBlockConfiguration.maxHeight) {
+                event.isCancelled = true
+            }
+        }
+
         plugin.eventListener<BlockBreakEvent>(EventPriority.HIGHEST) {
             if (it.block.type == config.spawnBlockConfiguration.block && isProtectedBlock(it.block.location))
                 it.isCancelled = true
@@ -70,31 +79,37 @@ class BaseSpawnMobService @Inject constructor(
             if (pistonShouldBeCancelled(it)) it.isCancelled = true
         }
 
-        plugin.eventListener<PlayerInteractEvent> {
-            val clickedBlock = it.clickedBlock ?: return@eventListener
-            val item = it.item ?: return@eventListener
+        plugin.eventListener<PlayerInteractEvent> { event ->
+            if (event.action != Action.RIGHT_CLICK_BLOCK) return@eventListener
+
+            val clickedBlock = event.clickedBlock ?: return@eventListener
+            val item = event.item ?: return@eventListener
+
             if (!item.type.name.contains("SPAWN_EGG", ignoreCase = true)) return@eventListener
-            val mobName = item.getNBTTag<String>("MYTHIC_EGG")?.lowercase() ?: run {
-                it.isCancelled = true
+
+            val mobName = item.getNBTTag<String>("MYTHIC_EGG_")?.lowercase() ?: run {
+                event.isCancelled = true
                 return@eventListener
             }
+
+            event.isCancelled = true
+
             if (clickedBlock.type != config.spawnBlockConfiguration.block) {
-                it.isCancelled = true
                 return@eventListener
             }
 
             val existingMob = baseDataService.getMobByLocation(clickedBlock.location)
             if (existingMob != null) {
                 existingMob.addMobs(1)
-                item.amount -= 1
-                it.isCancelled = true
                 return@eventListener
             }
 
-            val mythicMob = MythicBukkit.inst().mobManager.getMythicMob(mobName.uppercase()).orElse(null)
-                ?: return@eventListener
+            val mythicMob = MythicBukkit.inst().mobManager.getMythicMob(mobName).orElse(null) ?: return@eventListener
             val spawnLocation = BukkitAdapter.adapt(clickedBlock.location.clone().add(0.5, 1.0, 0.5))
             val activeMob = mythicMob.spawn(spawnLocation, 1.0)
+            activeMob.despawnMode = DespawnMode.NEVER
+            activeMob.save()
+
             val mobData = MobData(
                 mobName = mobName,
                 uuid = activeMob.uniqueId,
@@ -102,9 +117,11 @@ class BaseSpawnMobService @Inject constructor(
             )
             val actualMob = baseDataService.addMob(mobData)
             baseHologramService.createHologramForMob(actualMob)
+
+            // уменьшаем яйцо
             item.amount -= 1
-            it.isCancelled = true
         }
+
 
         plugin.eventListener<PlayerInteractEntityEvent> {
             val player = it.player

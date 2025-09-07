@@ -122,7 +122,9 @@ class BaseMenuService @Inject constructor(
 
                     click.event.view.close()
                     baseHologramService.removeHologramForMob(mob)
-                    activeMob?.remove()
+                    activeMob!!.remove()
+                    activeMob.despawn()
+                    activeMob.setDead()
                     mob.destroy()
 
                     baseCustomMobSpawnEggService.give(player, mob.type)
