@@ -85,12 +85,8 @@ class BaseSpawnMobService @Inject constructor(
             val clickedBlock = event.clickedBlock ?: return@eventListener
             val item = event.item ?: return@eventListener
 
+            val mobName = item.getNBTTag<String>("MYTHIC_EGG_")?.lowercase() ?: return@eventListener
             if (!item.type.name.contains("SPAWN_EGG", ignoreCase = true)) return@eventListener
-
-            val mobName = item.getNBTTag<String>("MYTHIC_EGG_")?.lowercase() ?: run {
-                event.isCancelled = true
-                return@eventListener
-            }
 
             event.isCancelled = true
 
