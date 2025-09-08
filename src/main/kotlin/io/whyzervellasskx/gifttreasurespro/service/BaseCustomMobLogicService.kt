@@ -29,13 +29,13 @@ interface SpawnMobService : Service
 @Singleton
 class BaseSpawnMobService @Inject constructor(
     private val plugin: Plugin,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val baseDataService: BaseDataService,
     private val baseMenuService: BaseMenuService,
     private val baseHologramService: BaseHologramService,
 ) : SpawnMobService {
 
-    private val config get() = baseConfigurationService.config
+    private val config get() = kamlConfigurationService.config
 
     override suspend fun setup() {
         plugin.eventListener<BlockPlaceEvent> {

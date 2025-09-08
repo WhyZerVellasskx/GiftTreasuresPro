@@ -17,29 +17,20 @@ import kotlinx.serialization.modules.SerializersModule
 import org.bukkit.plugin.Plugin
 import kotlin.io.path.createDirectories
 
-// configuration
 interface ConfigurationService : Service {
     fun save()
 }
 
-// yaml configuration
-interface YamlConfigurationService : ConfigurationService {
-    var config: Configuration
-    var messages: MessagesConfiguration
-    var menus: MenusConfiguration
-}
-
-// implementation
 @Singleton
-class BaseConfigurationService @Inject constructor(
+class KamlConfigurationService @Inject constructor(
     plugin: Plugin,
-) : YamlConfigurationService {
+) : ConfigurationService {
 
-    override lateinit var config: Configuration
+    lateinit var config: Configuration
 
-    override lateinit var messages: MessagesConfiguration
+    lateinit var messages: MessagesConfiguration
 
-    override lateinit var menus: MenusConfiguration
+    lateinit var menus: MenusConfiguration
 
     private val configFolder = plugin.dataFolder.toPath()
 

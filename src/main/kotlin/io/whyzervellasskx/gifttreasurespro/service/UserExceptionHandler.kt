@@ -22,11 +22,11 @@ import org.bukkit.plugin.Plugin
 
 @Singleton
 class UserExceptionHandler @Inject constructor(
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val plugin: Plugin
 ) : UserExceptionHandler, Service {
 
-    private val messages get() = baseConfigurationService.messages
+    private val messages get() = kamlConfigurationService.messages
 
     override suspend fun setup() {
         plugin.eventListener<MCCoroutineExceptionEvent> { event ->

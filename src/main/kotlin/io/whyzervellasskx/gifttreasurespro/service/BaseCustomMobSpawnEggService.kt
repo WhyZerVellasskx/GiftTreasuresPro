@@ -18,12 +18,12 @@ interface CustomMobSpawnEggService : Service {
 
 @Singleton
 class BaseCustomMobSpawnEggService @Inject constructor(
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val plugin: Plugin,
 ) : CustomMobSpawnEggService {
 
     private val config: Configuration
-        get() = baseConfigurationService.config
+        get() = kamlConfigurationService.config
 
     override suspend fun give(player: Player, egg: String) = withContext(Dispatchers.Default) {
         val eggConfig = config.eggs[egg] ?: return@withContext

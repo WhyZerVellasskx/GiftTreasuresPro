@@ -15,7 +15,7 @@ import kotlin.time.measureTime
 @Singleton
 class Main @Inject constructor(
     private val plugin: Plugin,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val baseCommandService: BaseCommandService,
     private val userExceptionHandler: UserExceptionHandler,
     private val baseDataService: BaseDataService,
@@ -34,7 +34,7 @@ class Main @Inject constructor(
 
         services = buildList {
             arrayOf(
-                baseConfigurationService,
+                kamlConfigurationService,
                 userExceptionHandler,
                 baseHibernateSessionFactoryService,
                 baseDataService,

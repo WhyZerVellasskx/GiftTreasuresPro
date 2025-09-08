@@ -37,7 +37,7 @@ interface DataService : Service {
 @Singleton
 class BaseDataService @Inject constructor(
     private val hibernateService: BaseHibernateSessionFactoryService,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val plugin: Plugin,
     private val logger: Logger,
 ) : DataService {
@@ -47,7 +47,7 @@ class BaseDataService @Inject constructor(
 
     private lateinit var periodicallySaver: Job
 
-    private val config get() = baseConfigurationService.config
+    private val config get() = kamlConfigurationService.config
 
     override suspend fun setup() {
         loadAllMobs()

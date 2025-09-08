@@ -7,15 +7,15 @@ import dev.rollczi.litecommands.invocation.Invocation
 import dev.rollczi.litecommands.suggestion.SuggestionContext
 import dev.rollczi.litecommands.suggestion.SuggestionResult
 import io.whyzervellasskx.gifttreasurespro.model.MobNameArgumentProvider
-import io.whyzervellasskx.gifttreasurespro.service.BaseConfigurationService
+import io.whyzervellasskx.gifttreasurespro.service.KamlConfigurationService
 import jakarta.inject.Inject
 import org.bukkit.command.CommandSender
 
 class MobNameArgument @Inject constructor(
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
 ) : ArgumentResolver<CommandSender, MobNameArgumentProvider>() {
 
-    private val config get() = baseConfigurationService.config.eggs
+    private val config get() = kamlConfigurationService.config.eggs
 
     override fun parse(
         invocation: Invocation<CommandSender>,

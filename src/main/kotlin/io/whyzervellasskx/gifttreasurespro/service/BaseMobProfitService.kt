@@ -22,10 +22,10 @@ interface MobProfitService : Service
 class BaseMobProfitService @Inject constructor(
     private val plugin: Plugin,
     private val baseDataService: BaseDataService,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
 ) : MobProfitService {
 
-    private val config: Configuration get() = baseConfigurationService.config
+    private val config: Configuration get() = kamlConfigurationService.config
     private lateinit var profitJob: Job
 
     override suspend fun setup() {

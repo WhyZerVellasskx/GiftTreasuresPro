@@ -31,12 +31,12 @@ class BaseCommandService @Inject constructor(
     private val plugin: Plugin,
     private val logger: Logger,
     private val userExceptionHandler: UserExceptionHandler,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val treasuresCommand: TreasuresCommand,
     private val mobNameArgument: MobNameArgument,
 ) : CommandService {
 
-    private val messages get() = baseConfigurationService.messages
+    private val messages get() = kamlConfigurationService.messages
 
     private lateinit var platform: LiteCommands<CommandSender>
 

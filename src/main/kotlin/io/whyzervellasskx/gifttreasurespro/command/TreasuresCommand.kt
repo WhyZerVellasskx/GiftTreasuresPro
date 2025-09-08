@@ -14,7 +14,7 @@ import io.github.blackbaroness.boilerplate.paper.adventure
 import io.whyzervellasskx.gifttreasurespro.Main
 import io.whyzervellasskx.gifttreasurespro.model.MobNameArgumentProvider
 import io.whyzervellasskx.gifttreasurespro.model.PermissionConstant
-import io.whyzervellasskx.gifttreasurespro.service.BaseConfigurationService
+import io.whyzervellasskx.gifttreasurespro.service.KamlConfigurationService
 import io.whyzervellasskx.gifttreasurespro.service.BaseCustomMobSpawnEggService
 import jakarta.inject.Inject
 import jakarta.inject.Provider
@@ -28,12 +28,12 @@ import kotlin.time.toJavaDuration
 @Command(name = "gifttreasurespro")
 @Permission(PermissionConstant.COMMAND_PERMISSION_PREFIX)
 class TreasuresCommand @Inject constructor(
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val plugin: Plugin,
     private val baseCustomMobSpawnEggService: BaseCustomMobSpawnEggService,
     private val main: Provider<Main>,
 ) {
-    private val messages get() = baseConfigurationService.messages.common
+    private val messages get() = kamlConfigurationService.messages.common
 
     @Execute(name = "reload")
     @Permission(PermissionConstant.RELOAD)

@@ -28,10 +28,10 @@ interface HibernateSessionFactoryService : Service {
 @Singleton
 class BaseHibernateSessionFactoryService @Inject constructor(
     private val plugin: Plugin,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
 ) : HibernateSessionFactoryService {
 
-    private val config get() = baseConfigurationService.config
+    private val config get() = kamlConfigurationService.config
 
     private lateinit var sessionFactory: SessionFactory
 

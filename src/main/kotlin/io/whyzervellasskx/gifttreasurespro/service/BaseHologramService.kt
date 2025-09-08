@@ -30,11 +30,11 @@ interface HologramService : Service {
 class BaseHologramService @Inject constructor(
     private val plugin: Plugin,
     private val baseDataService: BaseDataService,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val baseProgressVisualizerService: BaseProgressVisualizerService,
 ) : HologramService {
 
-    private val config: Configuration get() = baseConfigurationService.config
+    private val config: Configuration get() = kamlConfigurationService.config
 
     private val hologramCache = HashMap<UUID, String>()
     private lateinit var hologramUpdater: Job

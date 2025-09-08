@@ -11,9 +11,7 @@ import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.MenuConfig
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.asMiniMessageComponent
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.import
 import io.github.blackbaroness.boilerplate.paper.adventure
-import io.github.blackbaroness.boilerplate.paper.giveOrDrop
 import io.lumine.mythic.bukkit.MythicBukkit
-import io.lumine.mythic.bukkit.adapters.BukkitItemStack
 import io.whyzervellasskx.gifttreasurespro.NoEnoughMoneyException
 import io.whyzervellasskx.gifttreasurespro.NoNextLevelException
 import jakarta.inject.Inject
@@ -23,7 +21,6 @@ import kotlinx.coroutines.withContext
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.Plugin
 import xyz.xenondevs.invui.gui.Gui
 import xyz.xenondevs.invui.item.Click
@@ -41,7 +38,7 @@ interface MenuService : Service {
 @Singleton
 class BaseMenuService @Inject constructor(
     private val plugin: Plugin,
-    private val baseConfigurationService: BaseConfigurationService,
+    private val kamlConfigurationService: KamlConfigurationService,
     private val dataService: BaseDataService,
     private val boilerplateInvUiFactory: BoilerplateInvUiFactory,
     private val baseProgressVisualizerService: BaseProgressVisualizerService,
@@ -49,9 +46,9 @@ class BaseMenuService @Inject constructor(
     private val baseHologramService: BaseHologramService,
 ) : MenuService {
 
-    private val config get() = baseConfigurationService.config
-    private val menus get() = baseConfigurationService.menus
-    private val messages get() = baseConfigurationService.messages
+    private val config get() = kamlConfigurationService.config
+    private val menus get() = kamlConfigurationService.menus
+    private val messages get() = kamlConfigurationService.messages
 
     private val economy by lazy {
         plugin.server.servicesManager.getRegistration(Economy::class.java)?.provider
