@@ -13,6 +13,7 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -33,14 +34,28 @@ class BaseMobProfitService @Inject constructor(
             .flatMap { it.levels.values }
             .minOfOrNull { it.duration.seconds }
 
-        profitJob = plugin.launch(Dispatchers.Default) {
+        plugin.launch(Dispatchers.Default) {
             while (isActive) {
                 val now = Instant.now()
 
                 baseDataService.getAllMobs().forEach { mob ->
-                    val location = mob.getLocation()
-                    val chunk = location.chunk
-                    if (!chunk.isLoaded || chunk.entities.none { it is Player }) return@forEach
+                    val mobLocation = mob.getLocation()
+                    val world = mobLocation.world ?: return@forEach
+
+                    val viewDistance = world.simulationDistance
+
+                    val mobChunkX = mobLocation.blockX shr 4
+                    val mobChunkZ = mobLocation.blockZ shr 4
+
+                    val isNearPlayer = world.players.any { player ->
+                        val playerChunkX = player.location.blockX shr 4
+                        val playerChunkZ = player.location.blockZ shr 4
+                        val dx = abs(playerChunkX - mobChunkX)
+                        val dz = abs(playerChunkZ - mobChunkZ)
+                        dx <= viewDistance && dz <= viewDistance
+                    }
+
+                    if (!isNearPlayer) return@forEach
 
                     val mobConfig = config.mobs[mob.type.lowercase()] ?: return@forEach
                     val levelConfig = mobConfig.levels[mob.getLevel()] ?: return@forEach

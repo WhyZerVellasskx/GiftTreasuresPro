@@ -15,6 +15,8 @@ import jakarta.inject.Singleton
 import org.bukkit.Location
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.block.PistonMoveReaction
+import org.bukkit.block.TileState
 import org.bukkit.event.EventPriority
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.*
@@ -51,6 +53,7 @@ class BaseSpawnMobService @Inject constructor(
             if (block.location.y <= config.spawnBlockConfiguration.maxHeight) {
                 event.isCancelled = true
             }
+
         }
 
         plugin.eventListener<BlockBreakEvent>(EventPriority.HIGHEST) {
@@ -81,6 +84,7 @@ class BaseSpawnMobService @Inject constructor(
 
         plugin.eventListener<PlayerInteractEvent> { event ->
             if (event.action != Action.RIGHT_CLICK_BLOCK) return@eventListener
+            val player = event.player
 
             val clickedBlock = event.clickedBlock ?: return@eventListener
             val item = event.item ?: return@eventListener
@@ -90,9 +94,11 @@ class BaseSpawnMobService @Inject constructor(
 
             event.isCancelled = true
 
-            if (clickedBlock.type != config.spawnBlockConfiguration.block) {
-                return@eventListener
-            }
+            val mobConfig = config.mobs[mobName]
+            if (mobConfig == null) return@eventListener
+
+            if (clickedBlock.type != config.spawnBlockConfiguration.block) return@eventListener
+            if (player.location.world.name !in config.allowedWorlds) return@eventListener
 
             val existingMob = baseDataService.getMobByLocation(clickedBlock.location)
             if (existingMob != null) {
@@ -114,10 +120,8 @@ class BaseSpawnMobService @Inject constructor(
             val actualMob = baseDataService.addMob(mobData)
             baseHologramService.createHologramForMob(actualMob)
 
-            // уменьшаем яйцо
             item.amount -= 1
         }
-
 
         plugin.eventListener<PlayerInteractEntityEvent> {
             val player = it.player

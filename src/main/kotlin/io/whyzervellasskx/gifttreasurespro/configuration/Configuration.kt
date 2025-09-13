@@ -15,6 +15,9 @@ data class Configuration(
     val mariadb: DatabaseConnection = DatabaseConnection(),
     val performance: Performance = Performance(),
     val spawnBlockConfiguration: SpawnBlockConfiguration = SpawnBlockConfiguration(),
+    val allowedWorlds: Set<String> = setOf(
+        "world",
+    ),
 
     val mobs: Map<String, MobConfiguration> = mapOf(
         "frog" to MobConfiguration(
@@ -31,8 +34,9 @@ data class Configuration(
                     profit = 25.0,
                     bankLimit = 5000.0,
                 )
-            )
-        ),
+            ),
+            hologramHeight = 2.5
+        )
     ),
 
     val eggs: Map<String, EggConfiguration> = mapOf(
@@ -84,6 +88,7 @@ data class Configuration(
     @Serializable
     data class MobConfiguration(
         val levels: Map<Int, LevelConfiguration> = emptyMap(),
+        val hologramHeight: Double,
     ) {
 
         @Serializable

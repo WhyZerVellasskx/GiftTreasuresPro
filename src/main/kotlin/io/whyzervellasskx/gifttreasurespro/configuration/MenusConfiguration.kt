@@ -6,6 +6,7 @@ import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.asMiniMess
 import kotlinx.serialization.Serializable
 import org.bukkit.Material
 import org.bukkit.Sound
+import org.bukkit.inventory.ItemFlag
 
 @Serializable
 data class MenusConfiguration(
@@ -43,7 +44,10 @@ data class MenusConfiguration(
                     "<gray>Статус: <status>",
                     "",
                     "<green>Нажмите, чтобы переключить",
-                ).map { it.asMiniMessageComponent }
+                ).map { it.asMiniMessageComponent },
+                flags = setOf(
+                    ItemFlag.HIDE_DESTROYS
+                ),
             ),
 
             'T' to ItemTemplate(

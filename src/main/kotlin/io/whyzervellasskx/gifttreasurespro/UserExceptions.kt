@@ -13,7 +13,7 @@ open class UserException(
 class InsufficientMobBalanceUserException(
     sender: CommandSender,
     val amount: BigDecimal,
-    val bank: BigDecimal
+    val currentBalance: BigDecimal
 ) : UserException(sender)
 
 class NoNextLevelException(
@@ -21,5 +21,7 @@ class NoNextLevelException(
 ) : UserException(sender)
 
 class NoEnoughMoneyException(
+    val amount: BigDecimal,
+    val bank: BigDecimal,
     sender: CommandSender,
 ) : UserException(sender)

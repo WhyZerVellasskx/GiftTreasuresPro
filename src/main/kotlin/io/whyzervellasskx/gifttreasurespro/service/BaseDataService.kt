@@ -178,7 +178,7 @@ class BaseDataService @Inject constructor(
             withContext(Dispatchers.IO) {
                 if (tryNumber > 5) {
                     logger.error("Failed to save mob '$uuid' after $tryNumber attempts")
-                    lastException?.printStackTrace()
+                    lastException?.stackTraceToString()
                     return@withContext
                 }
 

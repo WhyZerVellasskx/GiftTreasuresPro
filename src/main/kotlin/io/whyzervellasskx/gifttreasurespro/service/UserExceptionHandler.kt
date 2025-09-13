@@ -55,12 +55,16 @@ class UserExceptionHandler @Inject constructor(
 
             is NoNextLevelException -> user.adventure.sendMessage(messages.errors.noNextLevel)
 
-            is NoEnoughMoneyException -> user.adventure.sendMessage(messages.errors.noEnoughMoney)
-
-            is InsufficientMobBalanceUserException -> user.adventure.sendMessage(
+            is NoEnoughMoneyException -> user.adventure.sendMessage(
                 messages.errors.noEnoughMoney,
                 Boilerplate.tagResolver("amount", error.amount),
                 Boilerplate.tagResolver("bank", error.bank),
+                )
+
+            is InsufficientMobBalanceUserException -> user.adventure.sendMessage(
+                messages.errors.noEnoughMoneyInBank,
+                Boilerplate.tagResolver("amount", error.amount),
+                Boilerplate.tagResolver("current_balance", error.currentBalance),
             )
         }
     }

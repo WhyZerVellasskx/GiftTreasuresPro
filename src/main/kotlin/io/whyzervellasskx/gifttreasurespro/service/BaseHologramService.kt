@@ -81,7 +81,10 @@ class BaseHologramService @Inject constructor(
         if (DHAPI.getHologram(hologramName) != null) return
 
         val entity = MythicBukkit.inst().mobManager.getActiveMob(mob.uuid).orElse(null)?.entity?.bukkitEntity ?: return
-        val loc = entity.location.above(entity.height + 0.4)
+        val mobConfig = config.mobs[mob.type] ?: return
+        val hologramHeight = mobConfig.hologramHeight
+
+        val loc = entity.location.above(hologramHeight)
 
         DHAPI.createHologram(hologramName, loc, generateHologramLines(mob))
         hologramCache[mob.uuid] = hologramName

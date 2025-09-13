@@ -39,7 +39,8 @@ data class MessagesConfiguration(
             InvalidUsage.Cause.TOO_MANY_ARGUMENTS to "Слишком много аргументов"
         ),
 
-        val noEnoughMoney: String = "Недостаточно денег (есть: <bank>) а вы пытались снять <amount>",
+        val noEnoughMoney: String = "Недостаточно денег (есть: <money>) а нужно <amount>",
+        val noEnoughMoneyInBank: String = "Недостаточно денег (есть: <bank>) а вы пытались снять <amount>",
         val noNextLevel: String = "Нету некст левела",
     )
 }

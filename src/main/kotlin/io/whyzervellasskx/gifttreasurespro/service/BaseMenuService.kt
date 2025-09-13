@@ -27,6 +27,7 @@ import xyz.xenondevs.invui.item.Click
 import xyz.xenondevs.invui.item.Item
 import xyz.xenondevs.invui.item.impl.SimpleItem
 import xyz.xenondevs.invui.window.Window
+import java.math.BigDecimal
 import java.util.*
 
 interface MenuService : Service {
@@ -98,7 +99,9 @@ class BaseMenuService @Inject constructor(
                 )
 
                 applyTemplate(
-                    menuConfig, 'H', Boilerplate.tagResolver(
+                    menuConfig,
+                    'H',
+                    Boilerplate.tagResolver(
                         "status",
                         if (mob.isHologramEnabled) config.placeholders.hologramEnabled else config.placeholders.hologramDisable
                     )
@@ -129,8 +132,10 @@ class BaseMenuService @Inject constructor(
 
                 val displayNextLevel = nextLevelConfig?.let { (mob.getLevel() + 1).toString().asMiniMessageComponent }
                     ?: config.placeholders.noNextLevel
-                val displayPrice =
-                    nextLevelConfig?.price?.toString()?.asMiniMessageComponent ?: config.placeholders.noNextLevelPrice
+                val displayPrice: BigDecimal = nextLevelConfig?.price
+                    ?.let { BigDecimal(it.toString()) }
+                    ?: BigDecimal.ZERO
+
                 val actualPrice = nextLevelConfig?.price ?: 0.0
 
                 applyTemplate(
@@ -144,7 +149,7 @@ class BaseMenuService @Inject constructor(
                         throw NoNextLevelException(player)
 
                     if (!economy.has(player, actualPrice))
-                        throw NoEnoughMoneyException(player)
+                        throw NoEnoughMoneyException(actualPrice.toBigDecimal(), economy.getBalance(player).toBigDecimal(), player)
 
                     economy.withdrawPlayer(player, actualPrice)
                     mob.setLevel(nextLevel)
