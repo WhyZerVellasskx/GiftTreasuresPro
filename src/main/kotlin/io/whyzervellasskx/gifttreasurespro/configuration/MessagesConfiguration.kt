@@ -3,6 +3,7 @@ package io.whyzervellasskx.gifttreasurespro.configuration
 import dev.rollczi.litecommands.invalidusage.InvalidUsage
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.MiniMessageComponent
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.asMiniMessageComponent
+import io.whyzervellasskx.gifttreasurespro.ZoneAccessDeniedException
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
@@ -42,5 +43,6 @@ data class MessagesConfiguration(
         val noEnoughMoney: String = "Недостаточно денег (есть: <money>) а нужно <amount>",
         val noEnoughMoneyInBank: String = "Недостаточно денег (есть: <bank>) а вы пытались снять <amount>",
         val noNextLevel: String = "Нету некст левела",
+        val zoneAccessDenied: String = "У вас нету доступа к этому привату",
     )
 }

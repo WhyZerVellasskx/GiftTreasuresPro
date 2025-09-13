@@ -45,6 +45,8 @@ dependencies {
     implementation(libs.google.guice)
     implementation(libs.google.guice.assistedinject)
 
+    compileOnly(fileTree("gradle/libs"))
+
     compileOnly(libs.packetevents)
     implementation(libs.nbtapi.plugin)
     implementation(libs.boilerplate)
@@ -143,7 +145,7 @@ bukkit {
     description = project.description
     version = project.version.toString()
     apiVersion = "1.16"
-    depend = listOf("NBTAPI", "DecentHolograms", "Vault",)
+    depend = listOf("NBTAPI", "DecentHolograms", "Vault", "SaturnXGuard")
     website = "https://github.com/WhyZerVellasskx"
     authors = listOf("WhyZerVellasskx")
 }

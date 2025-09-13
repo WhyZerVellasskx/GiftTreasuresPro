@@ -1,17 +1,21 @@
 package io.whyzervellasskx.gifttreasurespro.service
 
 import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent
+import io.github.blackbaroness.boilerplate.adventure.sendMessage
 import io.github.blackbaroness.boilerplate.base.Service
 import io.github.blackbaroness.boilerplate.kotlinx.serialization.type.toLocationRetriever
+import io.github.blackbaroness.boilerplate.paper.adventure
 import io.lumine.mythic.bukkit.BukkitAdapter
 import io.lumine.mythic.bukkit.MythicBukkit
 import io.lumine.mythic.core.mobs.DespawnMode
 import io.papermc.paper.event.entity.EntityMoveEvent
+import io.whyzervellasskx.gifttreasurespro.ZoneAccessDeniedException
 import io.whyzervellasskx.gifttreasurespro.eventListener
 import io.whyzervellasskx.gifttreasurespro.getNBTTag
 import io.whyzervellasskx.gifttreasurespro.model.hibernate.entity.MobData
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
+import mc.servercode.guard.BlockGuardPlugin
 import org.bukkit.Location
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -126,9 +130,17 @@ class BaseSpawnMobService @Inject constructor(
         plugin.eventListener<PlayerInteractEntityEvent> {
             val player = it.player
             val entity = it.rightClicked
-            val activeMob =
-                MythicBukkit.inst().mobManager.getActiveMob(entity.uniqueId).orElse(null) ?: return@eventListener
+
+            val activeMob = MythicBukkit.inst().mobManager.getActiveMob(entity.uniqueId).orElse(null) ?: return@eventListener
             val mobData = baseDataService.getMob(activeMob.uniqueId) ?: return@eventListener
+
+            val zone = BlockGuardPlugin.getInstance().zoneStorage.findAt(entity.location).orElse(null)
+            if (zone != null) {
+                val uuid = player.uniqueId
+                val allowed = uuid == zone.ownerUUID || zone.allUsersUUIDs.contains(uuid)
+                if (!allowed) throw ZoneAccessDeniedException(player)
+            }
+
             baseMenuService.openMainMenu(player, mobData.uuid)
         }
 

@@ -25,3 +25,7 @@ class NoEnoughMoneyException(
     val bank: BigDecimal,
     sender: CommandSender,
 ) : UserException(sender)
+
+class ZoneAccessDeniedException(
+    sender: CommandSender
+) : UserException(sender)

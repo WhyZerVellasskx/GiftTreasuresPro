@@ -13,6 +13,7 @@ import io.whyzervellasskx.gifttreasurespro.InsufficientMobBalanceUserException
 import io.whyzervellasskx.gifttreasurespro.NoEnoughMoneyException
 import io.whyzervellasskx.gifttreasurespro.NoNextLevelException
 import io.whyzervellasskx.gifttreasurespro.UserException
+import io.whyzervellasskx.gifttreasurespro.ZoneAccessDeniedException
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.withContext
@@ -54,6 +55,8 @@ class UserExceptionHandler @Inject constructor(
         when (error) {
 
             is NoNextLevelException -> user.adventure.sendMessage(messages.errors.noNextLevel)
+
+            is ZoneAccessDeniedException -> user.adventure.sendMessage(messages.errors.zoneAccessDenied)
 
             is NoEnoughMoneyException -> user.adventure.sendMessage(
                 messages.errors.noEnoughMoney,
